@@ -1,15 +1,17 @@
 import pickle
 import pandas as pd
 import streamlit as st
+from rdkit import Chem
+from rdkit.Chem import Draw
 
 from utils import extract_lipinski_and_other_descriptors_from_txt
 from constants import LABELS, COLUMNS, POSSIBLE_NULL_COLUMNS, SINGLE_UNIQUE_VALUE_COLUMNS
 
 
 # Require user authentication
-# if not st.user.is_logged_in:
-#     st.error("Please log in to access the app.")
-#     st.stop()
+if not st.user.is_logged_in:
+    st.error("Please log in to access the app.")
+    st.stop()
 
 
 @st.cache_resource
@@ -77,11 +79,28 @@ if uploaded_file is not None:
 
             # Read the SMILES string from the text file
             smiles = uploaded_file.getvalue().decode("utf-8").strip()
+
+            
             st.info(smiles)
 
             # Create the description dataframe
-            descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
-            st.toast("SMILES Processed ✅")
+            molecule, descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
+            
+            canonical_smiles = Chem.MolToSmiles(molecule)
+            st.code(canonical_smiles, language="text")
+            molecule_image = Draw.MolToImage(molecule)
+
+            st.success("✅ SMILES file uploaded and validated successfully.")
+            st.markdown("#### 🧪 Detected SMILES")
+            st.image(
+                molecule_image,
+                caption="Molecular Structure",
+                width=350
+            )
+
+            
+
+            
             
             # Impute the null values
             imputer = load_model(IMPUTER)

@@ -40,4 +40,4 @@ def extract_lipinski_and_other_descriptors_from_txt(smiles):
             )
             descriptor_data[descriptor_name] = np.nan
 
-    return pd.DataFrame([descriptor_data])
+    return molecule, pd.DataFrame([descriptor_data])
