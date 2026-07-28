@@ -80,9 +80,6 @@ if uploaded_file is not None:
             # Read the SMILES string from the text file
             smiles = uploaded_file.getvalue().decode("utf-8").strip()
 
-            
-            st.info(smiles)
-
             # Create the description dataframe
             molecule, descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
             
@@ -99,17 +96,13 @@ if uploaded_file is not None:
             )
 
             
-
-            
-            
             # Impute the null values
             imputer = load_model(IMPUTER)
             descriptor_df[POSSIBLE_NULL_COLUMNS] = imputer.transform(descriptor_df[POSSIBLE_NULL_COLUMNS])
 
             # Drop columns with a single unique value
             descriptor_df_cleaned = descriptor_df.drop(columns=SINGLE_UNIQUE_VALUE_COLUMNS+["SMILES"])
-            
-
+        
 
             input_data = {
                 "herbicide": int(pesticide_type == "Herbicide"),
