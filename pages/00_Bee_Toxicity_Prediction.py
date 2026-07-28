@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 
 from utils import extract_lipinski_and_other_descriptors_from_txt
+from constants import LABELS, COLUMNS, POSSIBLE_NULL_COLUMNS, SINGLE_UNIQUE_VALUE_COLUMNS
 
 
 # Require user authentication
@@ -19,19 +20,10 @@ def load_model(model_path):
     return model
 
 
-
-
 CLASSIFICATION_MODEL = "BM_unscaled_unbalanced"
 IMPUTER = "imputer_model"
 OHE_MODEL = "onehot_encoder.pkl"
 
-
-
-LABELS = {0: "Non-Toxic", 1: "Toxic"}
-
-COLUMNS = ["herbicide", "fungicide", "insecticide", "other_agrochemical", "ppdb_level"]
-POSSIBLE_NULL_COLUMNS = ['MaxPartialCharge', 'MinPartialCharge', 'MaxAbsPartialCharge', 'MinAbsPartialCharge', 'BCUT2D_MWHI', 'BCUT2D_MWLOW', 'BCUT2D_CHGHI', 'BCUT2D_CHGLO', 'BCUT2D_LOGPHI', 'BCUT2D_LOGPLOW', 'BCUT2D_MRHI', 'BCUT2D_MRLOW']
-SINGLE_UNIQUE_VALUE_COLUMNS = ['SMR_VSA8', 'SlogP_VSA9', 'fr_HOCCN', 'fr_azide', 'fr_azo', 'fr_barbitur', 'fr_benzodiazepine', 'fr_diazo', 'fr_dihydropyridine', 'fr_isocyan', 'fr_isothiocyan', 'fr_lactam', 'fr_nitroso']
 
 
 st.title("Bee Toxicity Classification")
@@ -89,12 +81,11 @@ if uploaded_file is not None:
 
             # Create the description dataframe
             descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
-            st.toast("SMILES Processed")
+            st.toast("SMILES Processed ✅")
             
             # Impute the null values
             imputer = load_model(IMPUTER)
             descriptor_df[POSSIBLE_NULL_COLUMNS] = imputer.transform(descriptor_df[POSSIBLE_NULL_COLUMNS])
-            st.toast("Null Values Imputed")
 
             # Drop columns with a single unique value
             descriptor_df_cleaned = descriptor_df.drop(columns=SINGLE_UNIQUE_VALUE_COLUMNS+["SMILES"])
@@ -117,36 +108,21 @@ if uploaded_file is not None:
             encoded_data = onehot_encoder.transform([[toxicity_type]])
             encoded_df = pd.DataFrame(encoded_data, columns=onehot_encoder.get_feature_names_out(['toxicity_type']), index=input_df.index)
             final_df = pd.concat([input_df, descriptor_df_cleaned, encoded_df], axis=1)
-            st.toast("Final Dataframe Created")
 
-            st.dataframe(final_df)
 
             X_test = final_df.copy()
 
-            classification_model = load_model(CLASSIFICATION_MODEL)
-            y_pred = classification_model.predict(X_test)
-            predicted_class = y_pred[0]
-            st.toast("Processing Completed")
-            
-            if y_pred == 0:
+            with st.spinner("Predicting bee toxicity... 🐝"):
+                classification_model = load_model(CLASSIFICATION_MODEL)
+                y_pred = classification_model.predict(X_test)
+                predicted_class = y_pred[0]
+
+            st.toast("Processing Completed ✅")
+
+            if predicted_class == 0:
                 st.success(f"{LABELS.get(predicted_class)}")
             else:
-                st.warning(f"{LABELS.get(predicted_class)}")
-                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                st.error(f"{LABELS.get(predicted_class)}")
 
 else:
     st.info("Upload SMILES text file to get started.")
