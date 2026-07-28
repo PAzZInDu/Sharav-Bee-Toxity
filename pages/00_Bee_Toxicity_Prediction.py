@@ -87,8 +87,7 @@ if uploaded_file is not None:
 
             # Create the description dataframe
             descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
-            if descriptor_df:
-                st.toast("SMILES Processed")
+            st.toast("SMILES Processed")
             
             # Impute the null values
             imputer = load_model(IMPUTER)
@@ -116,8 +115,7 @@ if uploaded_file is not None:
             encoded_data = onehot_encoder.transform([[toxicity_type]])
             encoded_df = pd.DataFrame(encoded_data, columns=onehot_encoder.get_feature_names_out(['toxicity_type']), index=input_df.index)
             final_df = pd.concat([input_df, descriptor_df_cleaned, encoded_df], axis=1)
-            if final_df:
-                st.toast("Final Dataframe Created")
+            st.toast("Final Dataframe Created")
 
             st.dataframe(final_df)
 
