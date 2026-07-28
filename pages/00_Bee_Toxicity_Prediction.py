@@ -19,13 +19,15 @@ def load_model(model_path):
     return model
 
 
-CLASSIFICATION_MODEL_PATH = "BM_unscaled_unbalanced"
+
+
+CLASSIFICATION_MODEL = "BM_unscaled_unbalanced"
 IMPUTER = "imputer_model"
 OHE_MODEL = "onehot_encoder.pkl"
 
 
 
-LABELS = {0: "Non-Toxic", 1: "Toxic",}
+LABELS = {0: "Non-Toxic", 1: "Toxic"}
 
 COLUMNS = ["herbicide", "fungicide", "insecticide", "other_agrochemical", "ppdb_level"]
 POSSIBLE_NULL_COLUMNS = ['MaxPartialCharge', 'MinPartialCharge', 'MaxAbsPartialCharge', 'MinAbsPartialCharge', 'BCUT2D_MWHI', 'BCUT2D_MWLOW', 'BCUT2D_CHGHI', 'BCUT2D_CHGLO', 'BCUT2D_LOGPHI', 'BCUT2D_LOGPLOW', 'BCUT2D_MRHI', 'BCUT2D_MRLOW']
@@ -95,7 +97,7 @@ if uploaded_file is not None:
             st.toast("Null Values Imputed")
 
             # Drop columns with a single unique value
-            descriptor_df_cleaned = descriptor_df.drop(columns=SINGLE_UNIQUE_VALUE_COLUMNS)
+            descriptor_df_cleaned = descriptor_df.drop(columns=SINGLE_UNIQUE_VALUE_COLUMNS+["SMILES"])
             
 
 
@@ -118,6 +120,20 @@ if uploaded_file is not None:
             st.toast("Final Dataframe Created")
 
             st.dataframe(final_df)
+
+            X_test = final_df.copy()
+
+            classification_model = load_model(CLASSIFICATION_MODEL)
+            y_pred = classification_model.predict(X_test)
+            predicted_class = y_pred[0]
+            st.toast("Processing Completed")
+            
+            if y_pred == 0:
+                st.success(f"{LABELS.get(predicted_class)}")
+            else:
+                st.warning(f"{LABELS.get(predicted_class)}")
+                
+
 
 
 
