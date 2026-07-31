@@ -30,15 +30,15 @@ OHE_MODEL = "onehot_encoder.pkl"
 
 st.title("Bee Toxicity Classification")
 
-st.subheader("Upload Gene Features")
+st.subheader("Enter Chemical Structure")
 
-uploaded_file = st.file_uploader(
-    "Upload SMILES text file",
-    type=["txt"],
-    accept_multiple_files=False,
+smiles = st.text_input(
+    "SMILES string",
+    placeholder="Enter a SMILES string, for example: C[N+]1(C)CCCCC1.[Cl-]",
+    help="Enter one SMILES string describing the chemical structure.",
 )
 
-if uploaded_file is not None:
+if smiles.strip():
 
     # Select pesticide type
     pesticide_type = st.selectbox(
@@ -77,11 +77,14 @@ if uploaded_file is not None:
 
         else:
 
-            # Read the SMILES string from the text file
-            smiles = uploaded_file.getvalue().decode("utf-8").strip()
-
-            # Create the description dataframe
-            molecule, descriptor_df = extract_lipinski_and_other_descriptors_from_txt(smiles)
+            try:
+                # Validate the SMILES and create the descriptor dataframe
+                molecule, descriptor_df = extract_lipinski_and_other_descriptors_from_txt(
+                    smiles.strip()
+                )
+            except ValueError:
+                st.error("Invalid SMILES string. Please check the structure and try again.")
+                st.stop()
             
             canonical_smiles = Chem.MolToSmiles(molecule)
             st.code(canonical_smiles, language="text")
@@ -137,4 +140,4 @@ if uploaded_file is not None:
                 st.error(f"{LABELS.get(predicted_class)}")
 
 else:
-    st.info("Upload SMILES text file to get started.")
+    st.info("Enter a SMILES string to get started.")
